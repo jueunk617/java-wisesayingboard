@@ -1,109 +1,111 @@
 package com.back;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.io.File;
+import java.util.*;
 
 public class App {
     Scanner scanner = new Scanner(System.in);
-    List<WiseSaying> wiseSayings = new ArrayList<>();
-    int lastId = 0;
+    List<WiseSaying> wiseSayings;
+    int lastId;
+    WiseSayingRepository wiseSayingRepository = new WiseSayingRepository();
 
     void run() {
-
         System.out.println("== 명언 앱 ==");
+
+        wiseSayings = wiseSayingRepository.loadAll(); // 저장된 명언 파일 불러오기
+        lastId = wiseSayingRepository.loadLastId(); // 마지막 명언 변호
 
         while (true) {
             System.out.print("명령) ");
             String cmd = scanner.nextLine().trim();
 
-            if (cmd.equals("종료")) {
-                break;
-
-            } else if (cmd.equals("등록")) {
-                actionWrite();
-
-            } else if (cmd.equals("목록")) {
-                actionList();
-
-            } else if (cmd.startsWith("삭제?id=")) {
-                actionRemove(cmd);
-
-            } else if (cmd.startsWith("수정?id=")) {
-                actionModify(cmd);
-
-            }
+            if (cmd.equals("종료")) break;
+            else if (cmd.equals("등록")) actionWrite();
+            else if (cmd.equals("목록")) actionList();
+            else if (cmd.startsWith("삭제?id=")) actionDelete(cmd);
+            else if (cmd.startsWith("수정?id=")) actionModify(cmd);
+            else if (cmd.equals("빌드")) actionBuild();
+            // else if (cmd.equals("초기화")) actionReset(); 테스트용 초기화 기능
         }
-
-        scanner.close();
     }
 
     void actionWrite() {
         System.out.print("명언 : ");
         String content = scanner.nextLine().trim();
-
         System.out.print("작가 : ");
         String author = scanner.nextLine().trim();
 
         int id = ++lastId;
-
         WiseSaying ws = new WiseSaying(id, content, author);
         wiseSayings.add(ws);
+
+        wiseSayingRepository.save(ws);
+        wiseSayingRepository.saveLastId(lastId);
+
         System.out.println(id + "번 명언이 등록되었습니다.");
     }
 
     void actionList() {
         System.out.println("번호 / 작가 / 명언");
         System.out.println("----------------------");
-
         for (int i = wiseSayings.size() - 1; i >= 0; i--) {
             WiseSaying ws = wiseSayings.get(i);
             System.out.println(ws.id + " / " + ws.author + " / " + ws.content);
         }
     }
 
-    void actionRemove(String cmd) {
-        int idToDelete = Integer.parseInt(cmd.substring("삭제?id=".length())); // 명령어에서 삭제할 id 추출
-        boolean delete = false;
-
-        for (int i=0; i<wiseSayings.size(); i++) {
-            if (wiseSayings.get(i).id == idToDelete) {
-                wiseSayings.remove(i);
-                System.out.println(idToDelete + "번 명언이 삭제되었습니다.");
-                delete = true;
-                break;
-            }
-        }
-
-        if (!delete) { // 이미 삭제함
-            System.out.println(idToDelete + "번 명언은 존재하지 않습니다.");
+    void actionDelete(String cmd) {
+        int id = Integer.parseInt(cmd.substring("삭제?id=".length()));
+        boolean removed = wiseSayings.removeIf(ws -> ws.id == id);
+        if (removed) {
+            wiseSayingRepository.deleteById(id);
+            System.out.println(id + "번 명언이 삭제되었습니다.");
+        } else {
+            System.out.println(id + "번 명언은 존재하지 않습니다.");
         }
     }
 
     void actionModify(String cmd) {
-        int idToModify = Integer.parseInt(cmd.substring("수정?id=".length())); // 명령어에서 수정할 id 추출
-        WiseSaying target = null; // 수정할 명언 객체를 담을 용도
+        int id = Integer.parseInt(cmd.substring("수정?id=".length()));
+        for (WiseSaying ws : wiseSayings) {
+            if (ws.id == id) {
+                System.out.println("명언(기존) : " + ws.content);
+                System.out.print("명언 : ");
+                ws.content = scanner.nextLine().trim();
 
-        for (WiseSaying ws : wiseSayings) { // 번호가 같으면 해당 명언 객체 저장
-            if (ws.id == idToModify) {
-                target = ws;
-                break;
+                System.out.println("작가(기존) : " + ws.author);
+                System.out.print("작가 : ");
+                ws.author = scanner.nextLine().trim();
+
+                wiseSayingRepository.save(ws);
+                return;
+            }
+        }
+        System.out.println(id + "번 명언은 존재하지 않습니다.");
+    }
+
+    void actionBuild() {
+        wiseSayingRepository.buildDataJson(wiseSayings);
+    }
+
+    /*
+    void actionReset() {
+        File dir = new File("db/wiseSaying");
+
+        if (dir.exists() && dir.isDirectory()) {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    file.delete();
+                }
             }
         }
 
-        if (target == null) { // 객체가 없는 경우
-            System.out.println(idToModify + "번 명언은 존재하지 않습니다.");
-        } else {
-            System.out.println("명언(기존) : " + target.content);
-            System.out.print("명언 : ");
-            String newContent = scanner.nextLine().trim();
+        wiseSayings.clear();
+        lastId = 0;
 
-            System.out.println("작가(기존) : " + target.author);
-            System.out.print("작가 : ");
-            String newAuthor = scanner.nextLine().trim();
-
-            target.content = newContent;
-            target.author = newAuthor;
-        }
+        System.out.println("데이터가 초기화되었습니다.");
     }
+
+     */
 }
