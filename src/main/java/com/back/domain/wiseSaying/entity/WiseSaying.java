@@ -1,15 +1,21 @@
-package com.back;
+package com.back.domain.wiseSaying.entity;
 
 public class WiseSaying {
-    int id;
-    String content;
-    String author;
+    private int id;
+    private String content;
+    private String author;
 
     public WiseSaying(int id, String content, String author) {
         this.id = id;
         this.content = content;
         this.author = author;
     }
+
+    public int getId() { return id; }
+    public String getContent() { return content; }
+    public String getAuthor() { return author; }
+    public void setContent(String content) { this.content = content; }
+    public void setAuthor(String author) { this.author = author; }
 
     public String toJson() { // 명언 객체 -> JSON
         return "{\n" +
@@ -34,14 +40,12 @@ public class WiseSaying {
         start += pattern.length();
         int end = json.indexOf(",", start);
         if (end == -1) end = json.indexOf("}", start);
-        String value = json.substring(start, end).trim();
-        return Integer.parseInt(value);
+        return Integer.parseInt(json.substring(start, end).trim());
     }
 
     private static String extractStringValue(String json, String key) { // 문자열값 추출
         String pattern = "\"" + key + "\":";
         int start = json.indexOf(pattern);
-        if (start == -1) return "";
         start += pattern.length();
         int quoteStart = json.indexOf("\"", start);
         int quoteEnd = json.indexOf("\"", quoteStart + 1);
