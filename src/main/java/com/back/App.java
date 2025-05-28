@@ -17,7 +17,8 @@ public class App {
 
             if (cmd.equals("종료")) break;
 
-            wiseSayingController.handleCommand(cmd);
+            Rq rq = new Rq(cmd);
+            wiseSayingController.handleCommand(rq);
         }
     }
 }
