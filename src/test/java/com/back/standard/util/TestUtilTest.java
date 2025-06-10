@@ -35,12 +35,9 @@ public class TestUtilTest {
         System.out.println("2 / 이순신 / 나의 죽음을 적들에게 알리지 말라!");
 
         String out = byteArrayOutputStream.toString().trim();
-
-        // byteArrayOutputStream 전달
-        TestUtil.clearSetOutToByteArray(byteArrayOutputStream);
+        TestUtil.clearSetOutToByteArray();
 
         assertThat(out).isEqualTo("2 / 이순신 / 나의 죽음을 적들에게 알리지 말라!");
-
         System.out.println("이제는 화면에 출력됩니다.");
     }
 }

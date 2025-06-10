@@ -1,68 +1,61 @@
 package com.back.domain.wiseSaying.service;
 
+import com.back.AppContext;
 import com.back.domain.wiseSaying.entity.WiseSaying;
 import com.back.domain.wiseSaying.repository.WiseSayingRepository;
+import com.back.standard.dto.Page;
+import com.back.standard.dto.Pageable;
 
-import java.util.List;
+import java.util.Optional;
 
 public class WiseSayingService {
-    private final WiseSayingRepository repository;
-    private final List<WiseSaying> wiseSayings;
-    private int lastId;
+    private final WiseSayingRepository wiseSayingRepository;
 
     public WiseSayingService() {
-        this.repository = new WiseSayingRepository();
-        this.wiseSayings = repository.loadAll();
-        this.lastId = repository.loadLastId();
+        this.wiseSayingRepository = AppContext.wiseSayingRepository;
     }
 
-    public int write(String content, String author) {
-        int id = ++lastId;
-        WiseSaying ws = new WiseSaying(id, content, author);
-        wiseSayings.add(ws);
+    public WiseSaying write(String content, String author) {
+        WiseSaying wiseSaying = new WiseSaying(content, author);
 
-        repository.save(ws);
-        repository.saveLastId(lastId);
+        wiseSayingRepository.save(wiseSaying);
 
-        return id;
+        return wiseSaying;
     }
 
-    public List<WiseSaying> findAllReverse() {
-        List<WiseSaying> reversed = wiseSayings.stream()
-                .sorted((a, b) -> b.getId() - a.getId())
-                .toList();
-        return reversed;
-    }
+    public Page<WiseSaying> findForList(String keywordType, String keyword, Pageable pageable) {
+        if (keyword.isBlank()) return wiseSayingRepository.findForList(pageable);
 
-    public WiseSaying findById(int id) {
-        return wiseSayings.stream()
-                   .filter(ws -> ws.getId() == id)
-                   .findFirst()
-                   .orElse(null);
+        return switch (keywordType) {
+            case "content" -> wiseSayingRepository.findForListByContentContaining(keyword, pageable);
+            case "author" -> wiseSayingRepository.findForListByAuthorContaining(keyword, pageable);
+            default ->
+                    wiseSayingRepository.findForListByContentContainingOrAuthorContaining(keyword, keyword, pageable);
+        };
     }
 
     public boolean delete(int id) {
-        boolean removed = wiseSayings.removeIf(ws -> ws.getId() == id);
-        if (removed) repository.deleteById(id);
+        Optional<WiseSaying> opWiseSaying = wiseSayingRepository.findById(id);
 
-        return removed;
+        if (opWiseSaying.isEmpty()) return false;
+
+        wiseSayingRepository.delete(opWiseSaying.get());
+
+        return true;
     }
 
-    public void modify(WiseSaying ws, String newContent, String newAuthor) {
-        ws.setContent(newContent);
-        ws.setAuthor(newAuthor);
-        repository.save(ws);
+    public Optional<WiseSaying> findById(int id) {
+        return wiseSayingRepository.findById(id);
     }
 
-    public void buildJson() {
-        repository.buildDataJson(wiseSayings);
+    public void modify(WiseSaying wiseSaying, String content, String author) {
+        wiseSaying.setContent(content);
+        wiseSaying.setAuthor(author);
+
+        wiseSayingRepository.save(wiseSaying);
     }
 
-    public void reset() {
-        wiseSayings.clear();
-        lastId = 0;
-        repository.deleteAll();
-        repository.saveLastId(lastId);
+    public void archive() {
+        wiseSayingRepository.archive();
     }
-
 }

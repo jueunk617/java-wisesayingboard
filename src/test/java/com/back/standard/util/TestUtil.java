@@ -1,30 +1,28 @@
 package com.back.standard.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.io.UncheckedIOException;
 import java.util.Scanner;
 
 public class TestUtil {
     private static final PrintStream ORIGINAL_OUT = System.out;
+    private static PrintStream CURRENT_OUT;
 
     public static Scanner genScanner(String input) {
         return new Scanner(input);
     }
 
     public static ByteArrayOutputStream setOutToByteArray() {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(output, true));
-        return output;
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        CURRENT_OUT = new PrintStream(byteArrayOutputStream, true);
+        System.setOut(CURRENT_OUT);
+
+        return byteArrayOutputStream;
     }
 
-    public static void clearSetOutToByteArray(ByteArrayOutputStream output) {
+    public static void clearSetOutToByteArray() {
         System.setOut(ORIGINAL_OUT);
-        try {
-            output.close();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        CURRENT_OUT.close();
+        CURRENT_OUT = null;
     }
 }

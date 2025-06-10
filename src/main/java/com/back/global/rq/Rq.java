@@ -6,42 +6,37 @@ import java.util.stream.Collectors;
 
 public class Rq {
     private final String actionName;
-    private final Map<String, String> paramsMap;
+    private final Map<String, String> params;
 
     public Rq(String cmd) {
         String[] cmdBits = cmd.split("\\?", 2);
+        actionName = cmdBits[0].trim();
+        String queryString = cmdBits.length == 2 ? cmdBits[1].trim() : "";
 
-        actionName = cmdBits[0];
-        String queryString = cmdBits.length > 1 ? cmdBits[1].trim() : "";
-
-        paramsMap = Arrays.stream(queryString.split("&"))
-                .map(part -> part.split("=", 2))
-                .filter(bits -> bits.length == 2 && !bits[0].trim().isEmpty() && !bits[1].trim().isEmpty())
-                .collect(Collectors.toMap(
-                        bits -> bits[0].trim(),
-                        bits -> bits[1].trim()
-                ));
+        params = Arrays
+                .stream(queryString.split("&"))
+                .map(e -> e.split("=", 2))
+                .filter(e -> e.length == 2 && !e[0].isBlank() && !e[1].isBlank())
+                .collect(Collectors.toMap(e -> e[0].trim(), e -> e[1].trim()));
     }
 
-    public String getActionName() {
-        return actionName;
-    }
+    public int getParamAsInt(String name, int defaultValue) {
+        String value = getParam(name, "");
 
-    public String getParam(String paramName, String defaultValue) {
-        return paramsMap.getOrDefault(paramName, defaultValue);
-    }
-
-    public int getParamAsInt(String paramName, int defaultValue) {
-        String value = getParam(paramName, "");
-
-        if (value.isEmpty()) {
-            return defaultValue;
-        }
+        if (value == null) return defaultValue;
 
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             return defaultValue;
         }
+    }
+
+    public String getParam(String name, String defaultValue) {
+        return params.getOrDefault(name, defaultValue);
+    }
+
+    public String getActionName() {
+        return actionName;
     }
 }

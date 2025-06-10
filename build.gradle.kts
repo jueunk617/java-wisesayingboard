@@ -10,8 +10,9 @@ repositories {
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.9.1"))
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+
     testImplementation("org.assertj:assertj-core:3.27.3")
 
     compileOnly("org.projectlombok:lombok:1.18.38")

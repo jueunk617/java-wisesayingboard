@@ -41,5 +41,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-### test ###
-db
+### Custom ###
+temp
+testDb
+devDb
+prodDb
